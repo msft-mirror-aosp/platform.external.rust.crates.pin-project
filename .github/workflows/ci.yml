@@ -1,0 +1,146 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+      - staging
+      - trying
+  schedule:
+    - cron: '00 01 * * *'
+
+env:
+  RUSTFLAGS: -Dwarnings
+  RUST_BACKTRACE: 1
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  test:
+    name: test
+    strategy:
+      matrix:
+        include:
+          # This is the minimum supported Rust version of this crate.
+          # When updating this, the reminder to update the minimum supported
+          # Rust version in README.md.
+          - build: 1.34.0
+            rust: 1.34.0
+          - build: 1.36.0
+            rust: 1.36.0
+          - build: 1.37.0
+            rust: 1.37.0
+          - build: stable
+            rust: stable
+          - build: beta
+            rust: beta
+          - build: nightly
+            rust: nightly
+          # pin-project itself has no platform-dependent implementation.
+          # macOS is only used to check that pin-project can interoperate
+          # correctly with `#[cfg()]`.
+          - build: macos
+            os: macos
+            rust: nightly
+          # - build: windows
+          #   os: windows
+          #   rust: nightly
+    runs-on: ${{ matrix.os || 'ubuntu' }}-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Install Rust
+        run: |
+          . ./ci/install-rust.sh ${{ matrix.rust }}
+      - name: Install cargo-hack
+        if: matrix.rust == 'nightly'
+        run: |
+          cargo install cargo-hack
+      - name: Install cargo-expand
+        if: matrix.rust == 'nightly' && matrix.build != 'macos'
+        run: |
+          cargo install cargo-expand
+      - name: Add targets
+        if: matrix.rust == 'nightly'
+        run: |
+          rustup target add thumbv7m-none-eabi
+      - name: cargo test (stable)
+        if: matrix.rust != 'nightly'
+        run: |
+          cargo test --all --all-features --exclude expandtest
+      - name: cargo test (nightly)
+        if: matrix.rust == 'nightly'
+        run: |
+          cargo test --all --all-features -- -Zunstable-options --include-ignored
+      - name: cargo check --target thumbv7m-none-eabi
+        if: matrix.rust == 'nightly'
+        run: |
+          cargo check --target thumbv7m-none-eabi --manifest-path tests/no-std/Cargo.toml
+      # Refs: https://github.com/rust-lang/cargo/issues/5657
+      - name: cargo check -Zminimal-versions
+        if: matrix.rust == 'nightly'
+        run: |
+          cargo update -Zminimal-versions
+          cargo hack check --all --all-features --no-dev-deps --ignore-private
+
+  style:
+    name: style
+    strategy:
+      fail-fast: false
+      matrix:
+        component:
+          - clippy
+          - rustfmt
+          - rustdoc
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Install Rust
+        run: |
+          . ./ci/install-rust.sh
+      - name: Install component
+        if: matrix.component != 'rustdoc'
+        run: |
+          . ./ci/install-component.sh ${{ matrix.component }}
+      - name: cargo clippy
+        if: matrix.component == 'clippy'
+        run: |
+          cargo clippy --all --all-features --all-targets
+      - name: cargo fmt -- --check
+        if: matrix.component == 'rustfmt'
+        run: |
+          cargo fmt --all -- --check
+      - name: cargo doc
+        if: matrix.component == 'rustdoc'
+        env:
+          # TODO: once https://github.com/rust-lang/rust/issues/70814 fixed, remove '-Aunused_braces'
+          RUSTDOCFLAGS: -Dwarnings -Aunused_braces
+        run: |
+          cargo doc --no-deps --all --all-features
+
+  # Refs: https://github.com/rust-lang/crater/blob/9ab6f9697c901c4a44025cf0a39b73ad5b37d198/.github/workflows/bors.yml#L125-L149
+  #
+  # ALL THE PREVIOUS JOBS NEEDS TO BE ADDED TO THE `needs` SECTION OF THIS JOB!
+
+  ci-success:
+    name: ci
+    if: github.event_name == 'push' && success()
+    needs:
+      - style
+      - test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mark the job as a success
+        run: exit 0
+  ci-failure:
+    name: ci
+    if: github.event_name == 'push' && !success()
+    needs:
+      - style
+      - test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mark the job as a failure
+        run: exit 1
