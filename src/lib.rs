@@ -45,6 +45,9 @@
 #![allow(clippy::mem_replace_with_default, clippy::manual_non_exhaustive)]
 #![allow(clippy::needless_doctest_main)]
 
+// ANDROID: Use std to allow building as a dylib.
+extern crate std;
+
 #[doc(inline)]
 pub use pin_project_internal::pin_project;
 
