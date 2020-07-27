@@ -1,13 +1,11 @@
 #![warn(rust_2018_idioms, single_use_lifetimes)]
 #![warn(future_incompatible, nonstandard_style, rust_2018_compatibility, unused)]
 #![warn(clippy::all, clippy::pedantic, clippy::nursery)]
-
-#[allow(unknown_lints)] // for old compilers
-#[warn(
+#![allow(unknown_lints)] // for old compilers
+#![warn(
     absolute_paths_not_starting_with_crate,
     anonymous_parameters,
     box_pointers,
-    confusable_idents,
     deprecated_in_future,
     elided_lifetimes_in_paths,
     explicit_outlives_requirements,
@@ -38,6 +36,9 @@
 // unused_crate_dependencies: unrelated
 // unsafe_code: checked in forbid_unsafe module
 // unsafe_block_in_unsafe_fn: unstable
+
+// Check interoperability with rustc and clippy lints.
+
 pub mod basic {
     include!("include/basic.rs");
 }
@@ -51,17 +52,23 @@ pub mod forbid_unsafe {
 pub mod clippy {
     use pin_project::pin_project;
 
+    #[rustversion::attr(before(1.37), allow(single_use_lifetimes))] // https://github.com/rust-lang/rust/issues/53738
     #[pin_project(project_replace)]
+    #[derive(Debug)]
     pub struct MutMutStruct<'a, T, U> {
         #[pin]
         pub pinned: &'a mut T,
         pub unpinned: &'a mut U,
     }
 
+    #[rustversion::attr(before(1.37), allow(single_use_lifetimes))] // https://github.com/rust-lang/rust/issues/53738
     #[pin_project(project_replace)]
+    #[derive(Debug)]
     pub struct MutMutTupleStruct<'a, T, U>(#[pin] &'a mut T, &'a mut U);
 
+    #[rustversion::attr(before(1.37), allow(single_use_lifetimes))] // https://github.com/rust-lang/rust/issues/53738
     #[pin_project(project_replace)]
+    #[derive(Debug)]
     pub enum MutMutEnum<'a, T, U> {
         Struct {
             #[pin]
@@ -73,6 +80,7 @@ pub mod clippy {
     }
 
     #[pin_project(project_replace)]
+    #[derive(Debug)]
     pub struct TypeRepetitionInBoundsStruct<T, U>
     where
         Self: Sized,
@@ -83,11 +91,13 @@ pub mod clippy {
     }
 
     #[pin_project(project_replace)]
+    #[derive(Debug)]
     pub struct TypeRepetitionInBoundsTupleStruct<T, U>(#[pin] T, U)
     where
         Self: Sized;
 
     #[pin_project(project_replace)]
+    #[derive(Debug)]
     pub enum TypeRepetitionInBoundsEnum<T, U>
     where
         Self: Sized,
@@ -102,6 +112,7 @@ pub mod clippy {
     }
 
     #[pin_project(project_replace)]
+    #[derive(Debug)]
     pub struct UsedUnderscoreBindingStruct<T, U> {
         #[pin]
         pub _pinned: T,
@@ -109,6 +120,7 @@ pub mod clippy {
     }
 
     #[pin_project(project_replace)]
+    #[derive(Debug)]
     pub enum UsedUnderscoreBindingEnum<T, U> {
         Struct {
             #[pin]
@@ -118,7 +130,8 @@ pub mod clippy {
     }
 }
 
-#[rustversion::attr(not(since(2020-06-12)), ignore)]
+#[allow(box_pointers)]
+#[rustversion::attr(not(nightly), ignore)]
 #[test]
 fn check_lint_list() {
     use std::{env, process::Command, str};
