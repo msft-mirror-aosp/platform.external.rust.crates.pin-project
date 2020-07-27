@@ -36,7 +36,7 @@
 //! [struct-default-expanded]: https://github.com/taiki-e/pin-project/blob/master/examples/struct-default-expanded.rs
 
 #![no_std]
-#![doc(html_root_url = "https://docs.rs/pin-project/0.4.22")]
+#![doc(html_root_url = "https://docs.rs/pin-project/0.4.23")]
 #![doc(test(
     no_crate_inject,
     attr(deny(warnings, rust_2018_idioms, single_use_lifetimes), allow(dead_code))
@@ -46,8 +46,6 @@
 // mem::take and #[non_exhaustive] requires Rust 1.40
 #![allow(clippy::mem_replace_with_default, clippy::manual_non_exhaustive)]
 #![allow(clippy::needless_doctest_main)]
-// https://github.com/rust-lang/rust-clippy/issues/5704
-#![allow(clippy::unnested_or_patterns)]
 
 // ANDROID: Use std to allow building as a dylib.
 extern crate std;
@@ -227,7 +225,7 @@ pub mod __private {
     #[doc(hidden)]
     pub struct AlwaysUnpin<'a, T: ?Sized>(PhantomData<&'a ()>, PhantomData<T>);
 
-    impl<T: ?Sized> Unpin for AlwaysUnpin<'_, T> {}
+    impl<T> Unpin for AlwaysUnpin<'_, T> {}
 
     // This is an internal helper used to ensure a value is dropped.
     #[doc(hidden)]
