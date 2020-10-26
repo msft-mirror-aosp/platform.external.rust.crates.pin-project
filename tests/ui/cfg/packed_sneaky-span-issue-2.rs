@@ -1,4 +1,4 @@
-use auxiliary_macros::hidden_repr;
+use auxiliary_macro::hidden_repr;
 use pin_project::pin_project;
 
 //~ ERROR may not be used on #[repr(packed)] types
@@ -6,13 +6,13 @@ use pin_project::pin_project;
 // Refs: https://github.com/rust-lang/rust/issues/43081
 #[pin_project]
 #[hidden_repr(packed)]
-struct Foo {
+struct S {
     #[cfg(any())]
     #[pin]
-    field: u32,
+    f: u32,
     #[cfg(not(any()))]
     #[pin]
-    field: u8,
+    f: u8,
 }
 
 fn main() {}

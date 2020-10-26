@@ -6,14 +6,12 @@ rust_library {
     crate_name: "pin_project",
     srcs: ["src/lib.rs"],
     edition: "2018",
-    proc_macros: [
-        "libpin_project_internal",
-    ],
+    proc_macros: ["libpin_project_internal"],
 }
 
 // dependent_library ["feature_list"]
-//   pin-project-internal-0.4.23
-//   proc-macro2-1.0.18 "default,proc-macro"
+//   pin-project-internal-1.0.1
+//   proc-macro2-1.0.24 "default,proc-macro"
 //   quote-1.0.7 "default,proc-macro"
-//   syn-1.0.34 "clone-impls,default,derive,full,parsing,printing,proc-macro,quote,visit-mut"
+//   syn-1.0.48 "clone-impls,default,derive,full,parsing,printing,proc-macro,quote,visit,visit-mut"
 //   unicode-xid-0.2.1 "default"
