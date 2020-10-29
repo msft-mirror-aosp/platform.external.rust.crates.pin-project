@@ -6,11 +6,108 @@ This project adheres to [Semantic Versioning](https://semver.org).
 
 ## [Unreleased]
 
+## [1.0.1] - 2020-10-15
+
+* [Fix warnings when `#[pin_project]` attribute used within `macro_rules!` macros.](https://github.com/taiki-e/pin-project/pull/298)
+
+## [1.0.0] - 2020-10-13
+
+* [Remove deprecated `#[project]`, `#[project_ref]`, and `#[project_replace]` attributes.](https://github.com/taiki-e/pin-project/pull/265)
+
+  Name the projected type by passing an argument with the same name as the method to the `#[pin_project]` attribute instead:
+
+  ```diff
+  - #[pin_project]
+  + #[pin_project(project = EnumProj)]
+    enum Enum<T> {
+        Variant(#[pin] T),
+    }
+
+  - #[project]
+    fn func<T>(x: Pin<&mut Enum<T>>) {
+  -     #[project]
+        match x.project() {
+  -         Enum::Variant(_) => { /* ... */ }
+  +         EnumProj::Variant(_) => { /* ... */ }
+        }
+    }
+  ```
+
+* [Remove deprecated `Replace` argument from `#[pin_project]` attribute.](https://github.com/taiki-e/pin-project/pull/266) Use `project_replace` argument instead.
+
+* [Optimize code generation when used on enums.](https://github.com/taiki-e/pin-project/pull/270)
+
+* [Raise the minimum supported Rust version of this crate from Rust 1.34 to Rust 1.37.](https://github.com/taiki-e/pin-project/pull/292)
+
+* Suppress `explicit_outlives_requirements`, `box_pointers`, `clippy::large_enum_variant`, `clippy::pattern_type_mismatch`, `clippy::implicit_return`, and `clippy::redundant_pub_crate` lints in generated code. ([#276](https://github.com/taiki-e/pin-project/pull/276), [#277](https://github.com/taiki-e/pin-project/pull/277), [#284](https://github.com/taiki-e/pin-project/pull/284))
+
+* Diagnostic improvements.
+
+Changes since the 1.0.0-alpha.1 release:
+
+* [Fix drop order of pinned fields in project_replace](https://github.com/taiki-e/pin-project/pull/287)
+
+* Update minimal version of `syn` to 1.0.44
+
+## [1.0.0-alpha.1] - 2020-09-22
+
+* [Remove deprecated `#[project]`, `#[project_ref]`, and `#[project_replace]` attributes.](https://github.com/taiki-e/pin-project/pull/265)
+
+  Name the projected type by passing an argument with the same name as the method to the `#[pin_project]` attribute instead:
+
+  ```diff
+  - #[pin_project]
+  + #[pin_project(project = EnumProj)]
+    enum Enum<T> {
+        Variant(#[pin] T),
+    }
+
+  - #[project]
+    fn func<T>(x: Pin<&mut Enum<T>>) {
+  -     #[project]
+        match x.project() {
+  -         Enum::Variant(_) => { /* ... */ }
+  +         EnumProj::Variant(_) => { /* ... */ }
+        }
+    }
+  ```
+
+* [Remove deprecated `Replace` argument from `#[pin_project]` attribute.](https://github.com/taiki-e/pin-project/pull/266) Use `project_replace` argument instead.
+
+* [Optimize code generation when used on enums.](https://github.com/taiki-e/pin-project/pull/270)
+
+* Suppress `explicit_outlives_requirements`, `box_pointers`, `clippy::large_enum_variant`, `clippy::pattern_type_mismatch`, and `clippy::implicit_return` lints in generated code. ([#276](https://github.com/taiki-e/pin-project/pull/276), [#277](https://github.com/taiki-e/pin-project/pull/277))
+
+* Diagnostic improvements.
+
+See also [tracking issue for 1.0 release](https://github.com/taiki-e/pin-project/issues/264).
+
+## [0.4.27] - 2020-10-11
+
+* Update minimal version of `syn` to 1.0.44
+
+## [0.4.26] - 2020-10-04
+
+* [Fix drop order of pinned fields in project_replace](https://github.com/taiki-e/pin-project/pull/287)
+
+## [0.4.25] - 2020-10-01
+
+* Suppress `drop_bounds` lint, which will be added to rustc in the future. See [#272](https://github.com/taiki-e/pin-project/issues/272) for more details.
+
+  (Note: 1.0.0-alpha.1 already contains this change.)
+
+## [0.4.24] - 2020-09-26
+
+* Fix compatibility of generated code with `forbid(future_incompatible)`
+
+  Note: This does not guarantee compatibility with `forbid(future_incompatible)` in the future.
+  If rustc adds a new lint, we may not be able to keep this.
+
 ## [0.4.23] - 2020-07-27
 
-* [Fix compile error with `?Sized` type parameters.][262]
+* [Fix compile error with `?Sized` type parameters.][263]
 
-[262]: https://github.com/taiki-e/pin-project/pull/262
+[263]: https://github.com/taiki-e/pin-project/pull/263
 
 ## [0.4.22] - 2020-06-14
 
@@ -20,12 +117,9 @@ This project adheres to [Semantic Versioning](https://semver.org).
 
 * [Deprecated `#[project]`, `#[project_ref]`, and `#[project_replace]` attributes due to some unfixable limitations.][244]
 
-  Consider naming the projected type by passing an argument with the same name as the method to the #[pin_project] attribute instead.
+  Consider naming the projected type by passing an argument with the same name as the method to the `#[pin_project]` attribute instead.
 
   ```rust
-  use pin_project::pin_project;
-  use std::pin::Pin;
-
   #[pin_project(project = EnumProj)]
   enum Enum<T> {
       Variant(#[pin] T),
@@ -107,9 +201,6 @@ This project adheres to [Semantic Versioning](https://semver.org).
   By passing an argument with the same name as the method to the attribute, you can name the projection type returned from the method:
 
   ```rust
-  use pin_project::pin_project;
-  use std::pin::Pin;
-
   #[pin_project(project = EnumProj)]
   enum Enum<T> {
       Variant(#[pin] T),
@@ -143,7 +234,6 @@ This project adheres to [Semantic Versioning](https://semver.org).
 * [Added `!Unpin` option to `#[pin_project]` attribute for guarantee the type is `!Unpin`.][219]
 
   ```rust
-  use pin_project::pin_project;
   #[pin_project(!Unpin)]
   struct Struct<T, U> {
       field: T,
@@ -153,8 +243,6 @@ This project adheres to [Semantic Versioning](https://semver.org).
   This is equivalent to use `#[pin]` attribute for `PhantomPinned` field.
 
   ```rust
-  use pin_project::pin_project;
-  use std::marker::PhantomPinned;
   #[pin_project]
   struct Struct<T, U> {
       field: T,
@@ -163,7 +251,7 @@ This project adheres to [Semantic Versioning](https://semver.org).
   }
   ```
 
-  *[Note: This raises the minimum supported Rust version of this crate from rustc 1.33 to rustc 1.34.](https://github.com/taiki-e/pin-project/pull/219#pullrequestreview-408644187)*
+  *[Note: This raises the minimum supported Rust version of this crate from Rust 1.33 to Rust 1.34.](https://github.com/taiki-e/pin-project/pull/219#pullrequestreview-408644187)*
 
 * [Fixed an issue where duplicate `#[project]` attributes were ignored.][218]
 
@@ -392,7 +480,7 @@ Changes since the 0.4.0-beta.1 release:
 
 ## [0.4.0-alpha.9] - 2019-09-05
 
-* [Added 'project_into' method to #[pin_project] types][69]. This can be useful when returning a pin projection from a method.
+* [Added 'project_into' method to `#[pin_project]` types][69]. This can be useful when returning a pin projection from a method.
   ```rust
   fn get_pin_mut(self: Pin<&mut Self>) -> Pin<&mut T> {
       self.project_into().pinned
@@ -553,7 +641,14 @@ See also [tracking issue for 0.4 release][21].
 
 Initial release
 
-[Unreleased]: https://github.com/taiki-e/pin-project/compare/v0.4.23...HEAD
+[Unreleased]: https://github.com/taiki-e/pin-project/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/taiki-e/pin-project/compare/v1.0.0...v1.0.1
+[1.0.0]: https://github.com/taiki-e/pin-project/compare/v1.0.0-alpha.1...v1.0.0
+[1.0.0-alpha.1]: https://github.com/taiki-e/pin-project/compare/v0.4.23...v1.0.0-alpha.1
+[0.4.27]: https://github.com/taiki-e/pin-project/compare/v0.4.26...v0.4.27
+[0.4.26]: https://github.com/taiki-e/pin-project/compare/v0.4.25...v0.4.26
+[0.4.25]: https://github.com/taiki-e/pin-project/compare/v0.4.24...v0.4.25
+[0.4.24]: https://github.com/taiki-e/pin-project/compare/v0.4.23...v0.4.24
 [0.4.23]: https://github.com/taiki-e/pin-project/compare/v0.4.22...v0.4.23
 [0.4.22]: https://github.com/taiki-e/pin-project/compare/v0.4.21...v0.4.22
 [0.4.21]: https://github.com/taiki-e/pin-project/compare/v0.4.20...v0.4.21
