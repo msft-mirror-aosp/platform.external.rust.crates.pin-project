@@ -10,7 +10,7 @@ rust_library {
 }
 
 // dependent_library ["feature_list"]
-//   pin-project-internal-1.0.1
+//   pin-project-internal-1.0.2
 //   proc-macro2-1.0.24 "default,proc-macro"
 //   quote-1.0.7 "default,proc-macro"
 //   syn-1.0.48 "clone-impls,default,derive,full,parsing,printing,proc-macro,quote,visit,visit-mut"
