@@ -6,12 +6,12 @@ on:
     branches:
       - master
       - staging
-      - trying
   schedule:
     - cron: '0 1 * * *'
 
 env:
-  RUSTFLAGS: -Dwarnings
+  CARGO_INCREMENTAL: 0
+  RUSTFLAGS: -D warnings
   RUST_BACKTRACE: 1
 
 defaults:
@@ -20,7 +20,6 @@ defaults:
 
 jobs:
   test:
-    name: test
     strategy:
       matrix:
         rust:
@@ -40,99 +39,82 @@ jobs:
     runs-on: ${{ matrix.os || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@v2
-      - name: Install Rust
-        run: ci/install-rust.sh ${{ matrix.rust }}
-      - name: Install cargo-hack
-        if: matrix.rust == 'nightly'
-        run: |
-          cargo install cargo-hack
-      - name: Add targets
-        if: matrix.rust == 'nightly'
-        run: |
-          rustup target add thumbv7m-none-eabi
-      - name: cargo test
-        run: |
-          cargo test --all --all-features --exclude expandtest
-      - name: cargo check (no-std)
-        if: matrix.rust == 'nightly'
-        run: |
-          cargo check --target thumbv7m-none-eabi --manifest-path tests/no-std/Cargo.toml
-          cargo check --target thumbv7m-none-eabi --manifest-path tests/rust-2015/Cargo.toml
-      - name: cargo check (minimal versions)
-        if: matrix.rust == 'nightly'
-        run: |
-          bash scripts/check-minimal-versions.sh
+      - uses: taiki-e/github-actions/install-rust@main
+        with:
+          toolchain: ${{ matrix.rust }}
+      - if: startsWith(matrix.rust, 'nightly')
+        run: cargo install cargo-hack
+      - run: rustup target add thumbv7m-none-eabi
+      - run: cargo test --all --all-features --exclude expandtest
+      - run: cargo check --manifest-path tests/no-std/Cargo.toml --target thumbv7m-none-eabi
+      - run: cargo check --manifest-path tests/rust-2015/Cargo.toml --target thumbv7m-none-eabi
+      - if: startsWith(matrix.rust, 'nightly')
+        run: bash scripts/check-minimal-versions.sh
 
   expandtest:
-    name: expandtest
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Install Rust and Rustfmt
-        run: ci/install-component.sh rustfmt
+      - uses: taiki-e/github-actions/install-rust@main
+        with:
+          component: rustfmt
+      - name: Fetch latest release version of cargo-expand
+        run: |
+          mkdir -p .github/caching
+          curl -LsSf https://api.github.com/repos/dtolnay/cargo-expand/releases/latest | jq -r '.name' > .github/caching/cargo-expand.lock
+      - name: Cache cargo-expand
+        id: cache-cargo-expand
+        uses: actions/cache@v2
+        with:
+          path: ${{ runner.tool_cache }}/cargo-expand/bin
+          key: cargo-expand-bin-${{ hashFiles('.github/caching/cargo-expand.lock') }}
       - name: Install cargo-expand
-        run: |
-          cargo install cargo-expand
-      - name: cargo test (expandtest)
-        run: |
-          bash scripts/expandtest.sh
+        if: steps.cache-cargo-expand.outputs.cache-hit != 'true'
+        run: cargo install -f cargo-expand --root ${{ runner.tool_cache }}/cargo-expand
+      - run: echo "${{ runner.tool_cache }}/cargo-expand/bin" >> "${GITHUB_PATH}"
+      - run: cargo test -p expandtest
 
   miri:
-    name: miri
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Install Rust and Miri
-        run: |
-          ci/install-component.sh miri
-          cargo miri setup
-      - name: cargo miri test
-        run: |
-          cargo miri test
+      - uses: taiki-e/github-actions/install-rust@main
+        with:
+          component: miri
+      - run: cargo miri test
 
   clippy:
-    name: clippy
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Install Rust and Clippy
-        run: ci/install-component.sh clippy
-      - name: cargo clippy
-        run: |
-          cargo clippy --all --all-features --all-targets
+      - uses: taiki-e/github-actions/install-rust@main
+        with:
+          component: clippy
+      - run: cargo clippy --all --all-features --all-targets
 
   rustfmt:
-    name: rustfmt
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Install Rust and Rustfmt
-        run: ci/install-component.sh rustfmt
-      - name: cargo fmt --check
-        run: |
-          cargo fmt --all -- --check
+      - uses: taiki-e/github-actions/install-rust@main
+        with:
+          component: rustfmt
+      - run: cargo fmt --all -- --check
 
   rustdoc:
-    name: rustdoc
     env:
-      RUSTDOCFLAGS: -Dwarnings
+      RUSTDOCFLAGS: -D warnings
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Install Rust
-        run: ci/install-rust.sh
-      - name: cargo doc
-        run: |
-          cargo doc --no-deps --all --all-features
+      - uses: taiki-e/github-actions/install-rust@main
+      - run: cargo doc --no-deps --all --all-features
 
   shellcheck:
-    name: shellcheck
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: shellcheck
-        run: |
-          shellcheck ci/*.sh scripts/*.sh
+      - run: shellcheck **/*.sh
 
   # These jobs don't actually test anything, but they're used to tell bors the
   # build completed, as there is no practical way to detect when a workflow is
@@ -145,11 +127,11 @@ jobs:
     if: github.event_name == 'push' && success()
     needs:
       - test
+      - expandtest
+      - miri
       - clippy
       - rustfmt
       - rustdoc
-      - expandtest
-      - miri
       - shellcheck
     runs-on: ubuntu-latest
     steps:
@@ -160,11 +142,11 @@ jobs:
     if: github.event_name == 'push' && !success()
     needs:
       - test
+      - expandtest
+      - miri
       - clippy
       - rustfmt
       - rustdoc
-      - expandtest
-      - miri
       - shellcheck
     runs-on: ubuntu-latest
     steps:
