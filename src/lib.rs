@@ -6,8 +6,9 @@
 //! covering all the fields of struct or enum.
 //!
 //! ```rust
-//! use pin_project::pin_project;
 //! use std::pin::Pin;
+//!
+//! use pin_project::pin_project;
 //!
 //! #[pin_project]
 //! struct Struct<T, U> {
@@ -31,8 +32,9 @@
 //! returned from the method.
 //!
 //! ```rust
-//! use pin_project::pin_project;
 //! use std::pin::Pin;
+//!
+//! use pin_project::pin_project;
 //!
 //! #[pin_project(project = EnumProj)]
 //! enum Enum<T, U> {
@@ -82,7 +84,6 @@ extern crate std;
 
 #[doc(inline)]
 pub use pin_project_internal::pin_project;
-
 #[doc(inline)]
 pub use pin_project_internal::pinned_drop;
 
@@ -158,10 +159,10 @@ pub mod __private {
         ptr,
     };
 
-    use super::UnsafeUnpin;
-
     #[doc(hidden)]
     pub use pin_project_internal::__PinProjectInternalDerive;
+
+    use super::UnsafeUnpin;
 
     // An internal trait used for custom implementations of [`Drop`].
     //
