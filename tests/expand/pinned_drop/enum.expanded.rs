@@ -1,5 +1,5 @@
-use pin_project::{pin_project, pinned_drop};
 use std::pin::Pin;
+use pin_project::{pin_project, pinned_drop};
 # [pin (__private (PinnedDrop , project = EnumProj , project_ref = EnumProjRef))]
 enum Enum<T, U> {
     Struct {
@@ -18,9 +18,9 @@ enum Enum<T, U> {
 #[allow(clippy::unknown_clippy_lints)]
 #[allow(clippy::pattern_type_mismatch)]
 #[allow(clippy::redundant_pub_crate)]
+#[allow(clippy::type_repetition_in_bounds)]
 #[allow(dead_code)]
 #[allow(clippy::mut_mut)]
-#[allow(clippy::type_repetition_in_bounds)]
 enum EnumProj<'pin, T, U>
 where
     Enum<T, U>: 'pin,
@@ -40,9 +40,9 @@ where
 #[allow(clippy::unknown_clippy_lints)]
 #[allow(clippy::pattern_type_mismatch)]
 #[allow(clippy::redundant_pub_crate)]
+#[allow(clippy::type_repetition_in_bounds)]
 #[allow(dead_code)]
 #[allow(clippy::ref_option_ref)]
-#[allow(clippy::type_repetition_in_bounds)]
 enum EnumProjRef<'pin, T, U>
 where
     Enum<T, U>: 'pin,
@@ -62,7 +62,9 @@ where
 #[allow(clippy::unknown_clippy_lints)]
 #[allow(clippy::pattern_type_mismatch)]
 #[allow(clippy::redundant_pub_crate)]
+#[allow(clippy::type_repetition_in_bounds)]
 #[allow(clippy::semicolon_if_nothing_returned)]
+#[allow(clippy::use_self)]
 #[allow(clippy::used_underscore_binding)]
 const _: () = {
     impl<T, U> Enum<T, U> {
@@ -130,6 +132,7 @@ const _: () = {
         }
     }
 };
+#[doc(hidden)]
 impl<T, U> ::pin_project::__private::PinnedDrop for Enum<T, U> {
     unsafe fn drop(self: Pin<&mut Self>) {
         #[allow(clippy::needless_pass_by_value)]
