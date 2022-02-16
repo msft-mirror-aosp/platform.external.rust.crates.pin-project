@@ -1,7 +1,6 @@
 pub mod self_in_macro_def {
-    use std::pin::Pin;
-
     use pin_project::{pin_project, pinned_drop};
+    use std::pin::Pin;
 
     #[pin_project(PinnedDrop)]
     pub struct S {
@@ -24,9 +23,8 @@ pub mod self_in_macro_def {
 }
 
 pub mod self_span {
-    use std::pin::Pin;
-
     use pin_project::{pin_project, pinned_drop};
+    use std::pin::Pin;
 
     #[pin_project(PinnedDrop)]
     pub struct S {
