@@ -1,8 +1,7 @@
 error: #[pin_project] attribute may not be used on structs with zero fields
- --> $DIR/unsupported.rs:4:10
+ --> $DIR/unsupported.rs:4:1
   |
-4 |   struct S {
-  |  __________^
+4 | / struct S {
 5 | |     //~^ ERROR may not be used on structs with zero fields
 6 | |     #[cfg(any())]
 7 | |     #[pin]
