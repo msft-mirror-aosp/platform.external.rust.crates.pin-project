@@ -1,5 +1,5 @@
-use pin_project::{pin_project, pinned_drop};
 use std::pin::Pin;
+use pin_project::{pin_project, pinned_drop};
 #[pin(__private(PinnedDrop))]
 struct Struct<T, U> {
     #[pin]
@@ -14,20 +14,13 @@ struct Struct<T, U> {
 #[allow(clippy::unknown_clippy_lints)]
 #[allow(clippy::pattern_type_mismatch)]
 #[allow(clippy::redundant_pub_crate)]
+#[allow(clippy::type_repetition_in_bounds)]
 #[allow(clippy::semicolon_if_nothing_returned)]
+#[allow(clippy::use_self)]
 #[allow(clippy::used_underscore_binding)]
 const _: () = {
-    #[allow(box_pointers)]
-    #[allow(deprecated)]
-    #[allow(explicit_outlives_requirements)]
-    #[allow(single_use_lifetimes)]
-    #[allow(unreachable_pub)]
-    #[allow(clippy::unknown_clippy_lints)]
-    #[allow(clippy::pattern_type_mismatch)]
-    #[allow(clippy::redundant_pub_crate)]
     #[allow(dead_code)]
     #[allow(clippy::mut_mut)]
-    #[allow(clippy::type_repetition_in_bounds)]
     struct __StructProjection<'pin, T, U>
     where
         Struct<T, U>: 'pin,
@@ -35,17 +28,8 @@ const _: () = {
         pinned: ::pin_project::__private::Pin<&'pin mut (T)>,
         unpinned: &'pin mut (U),
     }
-    #[allow(box_pointers)]
-    #[allow(deprecated)]
-    #[allow(explicit_outlives_requirements)]
-    #[allow(single_use_lifetimes)]
-    #[allow(unreachable_pub)]
-    #[allow(clippy::unknown_clippy_lints)]
-    #[allow(clippy::pattern_type_mismatch)]
-    #[allow(clippy::redundant_pub_crate)]
     #[allow(dead_code)]
     #[allow(clippy::ref_option_ref)]
-    #[allow(clippy::type_repetition_in_bounds)]
     struct __StructProjectionRef<'pin, T, U>
     where
         Struct<T, U>: 'pin,
@@ -78,7 +62,7 @@ const _: () = {
             }
         }
     }
-    #[forbid(safe_packed_borrows)]
+    #[forbid(unaligned_references, safe_packed_borrows)]
     fn __assert_not_repr_packed<T, U>(this: &Struct<T, U>) {
         let _ = &this.pinned;
         let _ = &this.unpinned;
@@ -112,6 +96,7 @@ const _: () = {
         }
     }
 };
+#[doc(hidden)]
 impl<T, U> ::pin_project::__private::PinnedDrop for Struct<T, U> {
     unsafe fn drop(self: Pin<&mut Self>) {
         #[allow(clippy::needless_pass_by_value)]
