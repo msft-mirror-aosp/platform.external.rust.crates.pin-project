@@ -79,8 +79,10 @@ const _: () = {
 
                 // Destructors will run in reverse order, so next create a guard to overwrite
                 // `self` with the replacement value without calling destructors.
-                let __guard =
-                    ::pin_project::__private::UnsafeOverwriteGuard::new(__self_ptr, __replacement);
+                let __guard = ::pin_project::__private::UnsafeOverwriteGuard {
+                    target: __self_ptr,
+                    value: ::pin_project::__private::ManuallyDrop::new(__replacement),
+                };
 
                 let Self { pinned, unpinned } = &mut *__self_ptr;
 
@@ -96,7 +98,7 @@ const _: () = {
                 // this must be in its own scope, or else `__result` will not be dropped
                 // if any of the destructors panic.
                 {
-                    let __guard = ::pin_project::__private::UnsafeDropInPlaceGuard::new(pinned);
+                    let __guard = ::pin_project::__private::UnsafeDropInPlaceGuard(pinned);
                 }
 
                 // Finally, return the result
@@ -110,7 +112,7 @@ const _: () = {
     //
     // See ./struct-default-expanded.rs and https://github.com/taiki-e/pin-project/pull/34
     // for details.
-    #[forbid(unaligned_references, safe_packed_borrows)]
+    #[forbid(safe_packed_borrows)]
     fn __assert_not_repr_packed<T, U>(this: &Struct<T, U>) {
         let _ = &this.pinned;
         let _ = &this.unpinned;
